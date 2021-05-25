@@ -1,0 +1,3 @@
+[submodule "BinauralSH"]
+	path = BinauralSH
+	url = https://github.com/isaacengel/BinauralSH.git

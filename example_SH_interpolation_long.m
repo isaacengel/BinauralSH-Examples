@@ -131,7 +131,7 @@ for N=N_vec % iterate through spatial orders
             fprintf('\tFound %s. Skipping...\n',filename)
         else
             fprintf('\tGenerating hnm...\n');
-            [hnm,varOut] = toSH(h,N,'az',az,'el',el,'fs',fs,'mode',preproc);
+            [hnm,~,varOut] = toSH(h,N,'az',az,'el',el,'fs',fs,'mode',preproc);
             fprintf('\tSaving %s...\n',filename)
             save(filename,'hnm','varOut')
         end  

@@ -1,4 +1,4 @@
-% Simple SH interpolation example
+% Simple SH-based HRTF interpolation example
 %
 % EXTERNAL DEPENDENCIES:
 %   SOFA API for Matlab (github.com/sofacoustics/API_MO)
@@ -10,15 +10,17 @@
 clear
 
 %% Parameters
-N = 44; % SH order (~40 is high enough for very accurate interpolation)
+N = 3; % SH order (~40 is high enough for very accurate interpolation)
+method = 'MagLS'; % 'Trunc' = order truncation
+                  % 'MagLS' = magnitude least squares
+                  % 'SpSub' = spatial subsampling a.k.a. vritual loudspeakers
+                  % 'TA' = time alignment
+                  % 'BiMagLS' = bilateral MagLS (time alignment + MagLS)
 
-basepath=which('binauralSH_start'); % base path
-basepath=basepath(1:end-19); % Kill the function name from the path.
-
-hrirname = [basepath,'/hrtfs/FABIAN_HRIR_measured_HATO_0.sofa'];
+hrirname = 'hrtfs/FABIAN_HRIR_measured_HATO_0.sofa';
 
 %% Load HRTF
-SOFA_obj = SOFAload(filename); % load HRTF in SOFA format
+SOFA_obj = SOFAload(hrirname); % load HRTF in SOFA format
 [h,fs,az,el] = sofa2hrtf(SOFA_obj); % get HRTF data
 ndirs = size(h,2); % number of directions
 
@@ -38,7 +40,7 @@ az_toInt = az(alldirs);
 el_toInt = el(alldirs);
 
 %% Put HRTF in SH domain
-hnm = toSH(h_toInt,N,'az',az_toInt,'el',el_toInt,'fs',fs);
+hnm = toSH(h_toInt,N,'az',az_toInt,'el',el_toInt,'fs',fs,'mode',method);
 
 %% Interpolate test directions
 h_int = fromSH(hnm,fs,az_target,el_target);

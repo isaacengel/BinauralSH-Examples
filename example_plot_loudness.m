@@ -2,6 +2,7 @@
 % perceptually-weighted magnitude spectrum proposed in [1].
 %
 % EXTERNAL DEPENDENCIES:
+%   Auditory Modeling Toolbox (amtoolbox.sourceforge.net)
 %   SOFA API for Matlab (github.com/sofacoustics/API_MO)
 %
 % REFERENCES:
@@ -16,12 +17,10 @@
 clear
 
 %% Parameters
-basepath=which('binauralSH_start'); % base path
-basepath=basepath(1:end-19); % Kill the function name from the path.
-
+addpath(genpath('BinauralSH'))
 filenames = { % put here the paths to the HRTFs' SOFA files
-    [basepath,'/hrtfs/FABIAN_HRIR_measured_HATO_0.sofa']
-    [basepath,'/hrtfs/HRIR_L2702.sofa']
+    'hrtfs/FABIAN_HRIR_measured_HATO_0.sofa'
+    'hrtfs/HRIR_L2702.sofa'
 };
 labels = { % put here the names for the legend
     'FABIAN'

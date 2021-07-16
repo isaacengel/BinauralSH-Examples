@@ -1,8 +1,12 @@
+% Remove ITDs of an HRTF using ITD estimator from the AMT.
+%
+% EXTERNAL DEPENDENCIES:
+%   SOFA API for Matlab (github.com/sofacoustics/API_MO)
+%
+% AUTHOR: Isaac Engel - isaac.engel(at)imperial.ac.uk
+% February 2021
 
-basepath=which('binauralSH_start'); % base path
-basepath=basepath(1:end-19); % Kill the function name from the path.
-
-hrirname = [basepath,'/hrtfs/FABIAN_HRIR_measured_HATO_0.sofa'];
+hrirname = 'hrtfs/FABIAN_HRIR_measured_HATO_0.sofa';
 
 SOFA_obj = SOFAload(hrirname); % load HRTF in SOFA format
 [h,fs,az,el] = sofa2hrtf(SOFA_obj); % get HRTF data
@@ -23,7 +27,7 @@ for i=1:size(h,2)
 end
 
 %% Plot before and after alignment for az=90, el=0
-idx=SOFAfind(sofaobj,90,0); 
+idx=SOFAfind(SOFA_obj,90,0); 
 figure
 subplot(1,2,1)
 plot(squeeze(h(:,idx,:)))

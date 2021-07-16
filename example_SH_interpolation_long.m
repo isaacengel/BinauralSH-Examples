@@ -30,6 +30,17 @@
 %% Clear variables
 clear
 
+%% Ask user whether to run perceptual models (takes long)
+res = input('Run longer analysis using perceptual models, which might take several minutes? (y/n): ','s');
+if strcmpi(res,'y')
+    runModels = 1;
+elseif strcmpi(res,'n')
+    runModels = 0;
+else
+    warning('Wrong input (it should be ''y'' or ''n''. Not running models...')
+    runModels = 0;
+end
+
 %% Parameters
 N_vec = [1,5,10:10:40]; % spatial orders to test
 Nref = 44; % reference (very high) spatial order
@@ -39,13 +50,10 @@ itdJND = 20; % ITD JND for plots, according to Klockgether 2016
 ildJND = 0.6; % ILD JND for plots, according to Klockgether 2016
 
 % HRTF file
-basepath=which('binauralSH_start'); % base path
-basepath=basepath(1:end-19); % Kill the function name from the path.
-
-hrirname = [basepath,'/hrtfs/FABIAN_HRIR_measured_HATO_0.sofa'];
+hrirname = 'hrtfs/FABIAN_HRIR_measured_HATO_0.sofa';
 
 % Working directory
-workdir = [basepath,'/processed_data']; % change as needed
+workdir = 'processed_data'; % change as needed
 [~,hrtfname] = fileparts(hrirname);
 workdir = [workdir,'/',hrtfname];
 if ~isfolder(workdir)
@@ -142,11 +150,24 @@ end
 fprintf('Generating results...\n')
 
 %% First, run analysis for the reference (original HRTF)
+
+missingModels = runModels;
+saveFile = 1;
 filename = sprintf('%s/results/ref.mat',workdir);
+
 if isfile(filename)
+    
     fprintf('\tFound %s. Loading...\n',filename)
     load(filename,'results')
-else
+    if isfield(results,'lat_acc') || ~runModels
+        missingModels = 0;
+        saveFile = 0;
+    end
+    
+end
+
+if ~isfile(filename) || missingModels
+    
     fprintf('\tGenerating results for reference HRTF...\n')
 
     %% Numerical analysis
@@ -166,13 +187,17 @@ else
         'butterpoly', 10)*1e6;
     results.ild = getILD(h(:,indHP,:),fs);
 
+end
+
+if missingModels
+    
     %% Reijniers 2014
     fprintf('\t\tRunning reijniers2014...\n'); tic
     % Make DTF and SOFA object for Lebedev grid directions only
     dtf = getDTF(h(:,indLeb,:),fs);
     SOFA_obj = hrtf2sofa(dtf,fs,azLeb,elLeb);
     % Preprocessing source information (demo_reijniers2014)
-    [template_loc, target] = reijniers2014_preproc(SOFA_obj);
+    [template_loc, target] = reijniers2014_featureextraction(SOFA_obj);
     % Run virtual experiments (demo_reijniers2014)
     num_exp = 100;
     [doa, params] = reijniers2014(template_loc, target, 'num_exp', num_exp);       
@@ -184,8 +209,8 @@ else
     results.template_loc = template_loc; % template DTF
     fprintf('\t\tFinished running reijniers2014 (took %0.2f s)...\n',toc);
 
-    %% Run baumgartner2020
-    fprintf('\t\tRunning baumgartner2020...\n'); tic
+    %% Run baumgartner2021
+    fprintf('\t\tRunning baumgartner2021...\n'); tic
     % Make DTF for median plane directions only
     dtf = getDTF(h(:,indMP,:),fs);
     ndirs = numel(elMP);
@@ -194,10 +219,10 @@ else
     for j=1:ndirs
         template_ext{j} = hrtf2sofa(dtf(:,j,:),fs,azMP(j),elMP(j));
         % Get externalisation values
-        results.ext(j) = baumgartner2020(template_ext{j},template_ext{j});
+        results.ext(j) = baumgartner2021(template_ext{j},template_ext{j});
     end
     results.template_ext = template_ext; % template DTFs
-    fprintf('\t\tFinished running baumgartner2020 (took %0.2f s)...\n',toc);
+    fprintf('\t\tFinished running baumgartner2021 (took %0.2f s)...\n',toc);
 
     %% Run jelfs2011
     fprintf('\t\tRunning jelfs2011...\n'); tic
@@ -210,7 +235,10 @@ else
     end 
     results.srm = srm;
     fprintf('\t\tFinished running jelfs2011 (took %0.2f s)...\n',toc);
+        
+end
 
+if saveFile
     %% Save results
     fprintf('\t\tSaving results in %s...\n',filename)
     save(filename,'results')
@@ -230,11 +258,20 @@ for N=N_vec % iterate through spatial orders
     fprintf('Processing order %d...\n',N);
     Y = [];
     for i=1:ncond % iterate through conditions
+        missingModels = runModels;
+        saveFile = 1;
         name = test_conditions{i}.name;
         filename = sprintf('%s/results/ord%0.2d_%s.mat',workdir,N,name);
         if isfile(filename)
-            fprintf('\tFound %s. Skipping...\n',filename)
-        else
+            fprintf('\tFound %s. Loading...\n',filename)
+            load(filename,'results')
+            if isfield(results,'lat_acc') || ~runModels
+                missingModels = 0;
+                saveFile = 0;
+            end
+        end
+        
+        if ~isfile(filename) || missingModels
             fprintf('\tGenerating results...\n')
 
             if isempty(Y)
@@ -270,14 +307,16 @@ for N=N_vec % iterate through spatial orders
                 'MaxIACCe','lp','upper_cutfreq', 3000,...
                 'butterpoly', 10)*1e6;
             results.ild = getILD(hInterp(:,indHP,:),fs);
-
+        end
+        
+        if missingModels
             %% Reijniers 2014
             fprintf('\t\tRunning reijniers2014...\n'); tic
             % Make DTF and SOFA object for Lebedev grid directions only
             dtf = getDTF(hInterp(:,indLeb,:),fs);
             SOFA_obj = hrtf2sofa(dtf,fs,azLeb,elLeb);
             % Preprocessing source information (demo_reijniers2014)
-            [~, target] = reijniers2014_preproc(SOFA_obj);
+            [~, target] = reijniers2014_featureextraction(SOFA_obj);
             % Run virtual experiments (demo_reijniers2014)
             num_exp = 100;
             [doa, params] = reijniers2014(template_loc, target, 'num_exp', num_exp);       
@@ -288,8 +327,8 @@ for N=N_vec % iterate through spatial orders
             results.pol_prec = reijniers2014_metrics(doa, 'precP'); % polar std
             fprintf('\t\tFinished running reijniers2014 (took %0.2f s)...\n',toc);
 
-            %% Run baumgartner2020
-            fprintf('\t\tRunning baumgartner2020...\n'); tic
+            %% Run baumgartner2021
+            fprintf('\t\tRunning baumgartner2021...\n'); tic
             % Make DTF for median plane directions only
             dtf = getDTF(hInterp(:,indMP,:),fs);
             ndirs = numel(elMP);
@@ -297,9 +336,9 @@ for N=N_vec % iterate through spatial orders
             for j=1:ndirs
                 target = hrtf2sofa(dtf(:,j,:),fs,azMP(j),elMP(j));
                 % Get externalisation values
-                results.ext(j) = baumgartner2020(target,template_ext{j});
+                results.ext(j) = baumgartner2021(target,template_ext{j});
             end
-            fprintf('\t\tFinished running baumgartner2020 (took %0.2f s)...\n',toc);
+            fprintf('\t\tFinished running baumgartner2021 (took %0.2f s)...\n',toc);
 
             %% Run jelfs2011
             fprintf('\t\tRunning jelfs2011...\n'); tic
@@ -312,7 +351,9 @@ for N=N_vec % iterate through spatial orders
             end 
             results.srm = srm;
             fprintf('\t\tFinished running jelfs2011 (took %0.2f s)...\n',toc);
-
+        end
+        
+        if saveFile
             %% Save results
             fprintf('\t\tSaving results in %s...\n',filename)
             save(filename,'results')
@@ -850,7 +891,7 @@ for i=1:n
 end 
 
 ax = axes('innerposition',[0.4 0.05 0.2 0.3]);
-violinplot(PSD(:,2:end),[],'ShowData',false,'BoxWidth',0.03); grid on
+violinplot(PSD(indLeb,2:end),[],'ShowData',false,'BoxWidth',0.03); grid on
 % boxplot(PSD(:,2:end)), grid on
 % hold on, plot(mean(PSD(:,2:end)),'dg')
 xticklabels(labels(2:end))
@@ -860,6 +901,9 @@ set(gca,'fontsize',7)
 sgtitle('Loudness maps and perceptual spectral difference (PSD)')
 
 %% Plot Fig. 7 (models' outputs per spatial order)
+
+if runModels
+    
 % Load data from file
 names = {
     'Trunc'
@@ -958,3 +1002,4 @@ set(ha(6),'visible','off')
 
 sgtitle('Perceptual models'' output (per order)')
 
+end

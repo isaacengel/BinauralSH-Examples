@@ -403,12 +403,12 @@ sgtitle('HRTF energy in the SH domain, with and without alignment')
 %% Plot Fig. 2 (mag/phase errors per spatial order)
 % Load data from file
 names = {
-    'ord01_Trunc'
-    'ord05_Trunc'
-    'ord10_Trunc'
-    'ord20_Trunc'
-    'ord30_Trunc'
-    'ord40_Trunc'
+    ['ord01_',test_conditions{1}.name]
+    ['ord05_',test_conditions{1}.name]
+    ['ord10_',test_conditions{1}.name]
+    ['ord20_',test_conditions{1}.name]
+    ['ord30_',test_conditions{1}.name]
+    ['ord40_',test_conditions{1}.name]
 };
 labels = {
     'N=1'
@@ -502,12 +502,12 @@ sgtitle('Interpolation errors (non-aligned HRTF)')
 %% Plot Fig. 3 (mag/phase errors per spatial order, time-aligned)
 % Load data from file
 names = {
-    'ord01_TA'
-    'ord05_TA'
-    'ord10_TA'
-    'ord20_TA'
-    'ord30_TA'
-    'ord40_TA'
+    ['ord01_',test_conditions{2}.name]
+    ['ord05_',test_conditions{2}.name]
+    ['ord10_',test_conditions{2}.name]
+    ['ord20_',test_conditions{2}.name]
+    ['ord30_',test_conditions{2}.name]
+    ['ord40_',test_conditions{2}.name]
 };
 labels = {
     'N=1'
@@ -601,12 +601,12 @@ sgtitle('Interpolation errors (time-aligned HRTF)')
 %% Plot Fig. 3 (ITD/ILD per spatial order)
 % Load data from file
 names = {
-    'ord01_Trunc'
-    'ord05_Trunc'
-    'ord10_Trunc'
-    'ord20_Trunc'
-    'ord30_Trunc'
-    'ord40_Trunc'
+    ['ord01_',test_conditions{1}.name]
+    ['ord05_',test_conditions{1}.name]
+    ['ord10_',test_conditions{1}.name]
+    ['ord20_',test_conditions{1}.name]
+    ['ord30_',test_conditions{1}.name]
+    ['ord40_',test_conditions{1}.name]
     'ref'
 };
 labels = {
@@ -715,12 +715,12 @@ sgtitle('Interaural differences (non-aligned HRTF)')
 %% Plot Fig. 5 (ITD/ILD per spatial order)
 % Load data from file
 names = {
-    'ord01_TA'
-    'ord05_TA'
-    'ord10_TA'
-    'ord20_TA'
-    'ord30_TA'
-    'ord40_TA'
+    ['ord01_',test_conditions{2}.name]
+    ['ord05_',test_conditions{2}.name]
+    ['ord10_',test_conditions{2}.name]
+    ['ord20_',test_conditions{2}.name]
+    ['ord30_',test_conditions{2}.name]
+    ['ord40_',test_conditions{2}.name]
     'ref'
 };
 labels = {
@@ -829,13 +829,13 @@ sgtitle('Interaural differences (time-aligned HRTF)')
 % Load data from file
 names = {
     'ref'
-    'ord05_Trunc'
-    'ord05_TA'
+    ['ord05_',test_conditions{1}.name]
+    ['ord05_',test_conditions{2}.name]
 };
 labels = {
     'Reference'
-    'Trunc'
-    'TA'
+    test_conditions{1}.name
+    test_conditions{2}.name
 };
 n = numel(names);
 ndirs = numel(az);
@@ -906,13 +906,13 @@ if runModels
     
 % Load data from file
 names = {
-    'Trunc'
-    'TA'
+    test_conditions{1}.name
+    test_conditions{2}.name
     'ref'
 };
 labels = {
-    'Trunc'
-    'TA'
+    test_conditions{1}.name
+    test_conditions{2}.name
     'Reference'
 };
 n = numel(names);
